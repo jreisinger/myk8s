@@ -11,6 +11,7 @@ import (
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
+	"sigs.k8s.io/yaml"
 )
 
 func main() {
@@ -80,6 +81,40 @@ func main() {
 					}
 					args := cCtx.Args()
 					return logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
+				},
+			},
+			{
+				Name:  "services",
+				Usage: "Get services in YAML with useless fields removed",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "replace",
+						Usage: "replace all non-overlapping instances of `string` in name",
+					},
+					&cli.StringFlag{
+						Name:  "with",
+						Usage: "with `string`",
+					},
+				},
+				Action: func(cCtx *cli.Context) error {
+					client, err := GetOutOfClusterClient(kubeconfig)
+					if err != nil {
+						return err
+					}
+					services, err := GetServices(*client, namespace)
+					if err != nil {
+						return err
+					}
+					for _, svc := range services.Items {
+						mySvc := ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
+						fmt.Printf("---\n")
+						yamlData, err := yaml.Marshal(&mySvc)
+						if err != nil {
+							return err
+						}
+						fmt.Print(string(yamlData))
+					}
+					return nil
 				},
 			},
 		},
