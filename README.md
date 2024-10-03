@@ -1,1 +1,1 @@
-Generic reusable snippets for programs talking to Kubernetes API. The snippets use https://github.com/kubernetes/client-go.
+Talk to Kubernetes cluster, my way :-)

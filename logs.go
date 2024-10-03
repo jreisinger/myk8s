@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"regexp"
 	"strings"
 
@@ -40,4 +42,68 @@ func GetLogs(client kubernetes.Clientset, namespace string, pod corev1.Pod, rege
 	}
 
 	return containers, nil
+}
+
+func Logs(client *kubernetes.Clientset, namespace string, rx *regexp.Regexp, tail int, podPhase string, podNames ...string) error {
+	pods, err := GetPods(*client, namespace, podPhase)
+	if err != nil {
+		return err
+	}
+
+	podHasLogs := make(map[string]bool)
+POD:
+	for _, pod := range pods.Items {
+		if !found(pod.Name, podNames...) {
+			continue POD
+		}
+
+		containers, _ := GetLogs(*client, namespace, pod, rx)
+		for _, c := range containers {
+			if len(c.Logs) > 0 {
+				podHasLogs[pod.Name] = true
+				continue POD
+			}
+		}
+
+	}
+
+	for _, pod := range pods.Items {
+		if !podHasLogs[pod.Name] {
+			continue
+		}
+
+		containers, err := GetLogs(*client, namespace, pod, rx)
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		fmt.Printf("=== %s ===\n", pod.Name)
+		for _, c := range containers {
+			fmt.Printf("--- %s ---\n", c.Name)
+			for _, log := range lastNElements(c.Logs, tail) {
+				fmt.Println(log)
+			}
+		}
+	}
+
+	return nil
+}
+
+func found(name string, names ...string) bool {
+	if len(names) == 0 {
+		return true
+	}
+	for _, n := range names {
+		if n == name {
+			return true
+		}
+	}
+	return false
+}
+
+func lastNElements(ss []string, n int) []string {
+	if n > len(ss) {
+		return ss
+	}
+	return ss[len(ss)-n:]
 }

@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
 )
@@ -44,7 +43,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "logs",
-				Usage: "Prints containers' logs",
+				Usage: "Prints logs of containers",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "pattern",
@@ -80,16 +79,16 @@ func main() {
 						return err
 					}
 					args := cCtx.Args()
-					return logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
+					return Logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
 				},
 			},
 			{
 				Name:  "services",
-				Usage: "Get services in YAML with useless fields removed",
+				Usage: "Prints services in YAML with useless fields removed",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "replace",
-						Usage: "replace all non-overlapping instances of `string` in name",
+						Usage: "replace all non-overlapping instances of `string` in service name",
 					},
 					&cli.StringFlag{
 						Name:  "with",
@@ -123,68 +122,4 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func logs(client *kubernetes.Clientset, namespace string, rx *regexp.Regexp, tail int, podPhase string, podNames ...string) error {
-	pods, err := GetPods(*client, namespace, podPhase)
-	if err != nil {
-		return err
-	}
-
-	podHasLogs := make(map[string]bool)
-POD:
-	for _, pod := range pods.Items {
-		if !found(pod.Name, podNames...) {
-			continue POD
-		}
-
-		containers, _ := GetLogs(*client, namespace, pod, rx)
-		for _, c := range containers {
-			if len(c.Logs) > 0 {
-				podHasLogs[pod.Name] = true
-				continue POD
-			}
-		}
-
-	}
-
-	for _, pod := range pods.Items {
-		if !podHasLogs[pod.Name] {
-			continue
-		}
-
-		containers, err := GetLogs(*client, namespace, pod, rx)
-		if err != nil {
-			log.Print(err)
-			continue
-		}
-		fmt.Printf("=== %s ===\n", pod.Name)
-		for _, c := range containers {
-			fmt.Printf("--- %s ---\n", c.Name)
-			for _, log := range lastNElements(c.Logs, tail) {
-				fmt.Println(log)
-			}
-		}
-	}
-
-	return nil
-}
-
-func found(name string, names ...string) bool {
-	if len(names) == 0 {
-		return true
-	}
-	for _, n := range names {
-		if n == name {
-			return true
-		}
-	}
-	return false
-}
-
-func lastNElements(ss []string, n int) []string {
-	if n > len(ss) {
-		return ss
-	}
-	return ss[len(ss)-n:]
 }
