@@ -22,7 +22,7 @@ func main() {
 	)
 
 	app := &cli.App{
-		Usage: "Talk to Kubernetes cluster, my way :-)",
+		Usage: "my way of talking to Kubernetes cluster :-)",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "kubeconfig",
@@ -71,7 +71,7 @@ func main() {
 			},
 			{
 				Name:  "services",
-				Usage: "Prints services in YAML with useless fields removed",
+				Usage: "Prints services in YAML consumable by kubectl",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "replace",
@@ -105,7 +105,7 @@ func main() {
 			},
 			{
 				Name:  "graph",
-				Usage: "Visualize relations of each pod",
+				Usage: "Visualizes relations of each pod",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "bypod",
