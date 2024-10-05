@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/util/homedir"
@@ -54,19 +53,7 @@ func main() {
 						Value: 10,
 						Usage: "last `n` log lines",
 					},
-					&cli.StringFlag{
-						Name:  "phase",
-						Usage: "logs of pods in lifecycle `phase`",
-						Action: func(ctx *cli.Context, s string) error {
-							possible := []string{"pending", "running", "succeeded", "failed", "unknown"}
-							for _, p := range possible {
-								if ctx.String("phase") == p {
-									return nil
-								}
-							}
-							return fmt.Errorf("possible phases: %v", strings.Join(possible, ", "))
-						},
-					},
+					&phase,
 				},
 				ArgsUsage: "[pod...]",
 				Action: func(cCtx *cli.Context) error {
@@ -113,6 +100,35 @@ func main() {
 						}
 						fmt.Print(string(yamlData))
 					}
+					return nil
+				},
+			},
+			{
+				Name:  "graph",
+				Usage: "Visualize relations of each pod",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "bypod",
+						Usage: "group by pod instead by top level object",
+					},
+					&phase,
+				},
+				Action: func(cCtx *cli.Context) error {
+					client, err := GetOutOfClusterClient(kubeconfig)
+					if err != nil {
+						return err
+					}
+					graphs, err := GetGraphs(*client, namespace, cCtx.String("phase"))
+					if err != nil {
+						return err
+					}
+					if cCtx.Bool("nogroup") {
+						for _, g := range graphs {
+							fmt.Println(g)
+						}
+						return nil
+					}
+					fmt.Println(graphs)
 					return nil
 				},
 			},
