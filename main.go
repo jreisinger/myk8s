@@ -13,6 +13,8 @@ import (
 
 	"github.com/jreisinger/myk8s/get"
 	"github.com/jreisinger/myk8s/graph"
+	"github.com/jreisinger/myk8s/logs"
+	"github.com/jreisinger/myk8s/services"
 )
 
 func main() {
@@ -69,7 +71,7 @@ func main() {
 						return err
 					}
 					args := cCtx.Args()
-					return get.Logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
+					return logs.Print(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
 				},
 			},
 			{
@@ -90,12 +92,12 @@ func main() {
 					if err != nil {
 						return err
 					}
-					services, err := get.Services(*client, namespace)
+					svcs, err := get.Services(*client, namespace)
 					if err != nil {
 						return err
 					}
-					for _, svc := range services.Items {
-						mySvc := get.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
+					for _, svc := range svcs.Items {
+						mySvc := services.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
 						fmt.Printf("---\n")
 						yamlData, err := yaml.Marshal(&mySvc)
 						if err != nil {

@@ -1,4 +1,4 @@
-package get
+package logs
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/jreisinger/myk8s/get"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 )
@@ -44,8 +45,8 @@ func logs(client kubernetes.Clientset, namespace string, pod corev1.Pod, regex *
 	return containers, nil
 }
 
-func Logs(client *kubernetes.Clientset, namespace string, rx *regexp.Regexp, tail int, podPhase string, podNames ...string) error {
-	pods, err := Pods(*client, namespace, podPhase)
+func Print(client *kubernetes.Clientset, namespace string, rx *regexp.Regexp, tail int, podPhase string, podNames ...string) error {
+	pods, err := get.Pods(*client, namespace, podPhase)
 	if err != nil {
 		return err
 	}
