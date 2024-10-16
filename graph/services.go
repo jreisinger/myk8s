@@ -8,7 +8,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/jreisinger/myk8s/get"
+	"github.com/jreisinger/myk8s/internal/get"
 )
 
 type MyService struct {

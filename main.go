@@ -12,8 +12,9 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/jreisinger/myk8s/dup"
-	"github.com/jreisinger/myk8s/get"
 	"github.com/jreisinger/myk8s/graph"
+	"github.com/jreisinger/myk8s/internal/clientset"
+	"github.com/jreisinger/myk8s/internal/get"
 	"github.com/jreisinger/myk8s/logs"
 )
 
@@ -27,7 +28,7 @@ func main() {
 	)
 
 	app := &cli.App{
-		Usage: "my way of talking to Kubernetes cluster :-)",
+		Usage: "talks to Kubernetes cluster, my way :-)",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "kubeconfig",
@@ -46,42 +47,13 @@ func main() {
 		},
 		Commands: []*cli.Command{
 			{
-				Name:  "logs",
-				Usage: "Prints containers logs",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "pattern",
-						Usage: "logs matching `regex` pattern (case insensitive)",
-					},
-					&cli.IntFlag{
-						Name:  "tail",
-						Value: 10,
-						Usage: "last `n` log lines",
-					},
-					&phase,
-				},
-				ArgsUsage: "[pod...]",
-				Action: func(cCtx *cli.Context) error {
-					client, err := GetOutOfClusterClient(kubeconfig)
-					if err != nil {
-						return err
-					}
-					rx, err := regexp.Compile("(?i)" + cCtx.String("pattern"))
-					if err != nil {
-						return err
-					}
-					args := cCtx.Args()
-					return logs.Print(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
-				},
-			},
-			{
 				Name:      "dup",
-				Usage:     "Prints existing resources in YAML consumable by kubectl apply",
+				Usage:     "prints existing resources in YAML consumable by kubectl apply",
 				ArgsUsage: "kind",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "replace",
-						Usage: "replace all non-overlapping instances of `string` in service name",
+						Usage: "replace all non-overlapping instances of `string` in name",
 					},
 					&cli.StringFlag{
 						Name:  "with",
@@ -89,21 +61,22 @@ func main() {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
+					supportedKinds := "svc"
 					if !cCtx.Args().Present() {
-						return fmt.Errorf("please supply a resource kind")
+						return fmt.Errorf("please supply one of: %s", supportedKinds)
 					}
-					client, err := GetOutOfClusterClient(kubeconfig)
+					client, err := clientset.GetOutOfCluster(kubeconfig)
 					if err != nil {
 						return err
 					}
 					switch cCtx.Args().First() {
-					case "svc", "service", "services":
+					case "svc":
 						svcs, err := get.Services(*client, namespace)
 						if err != nil {
 							return err
 						}
 						for _, svc := range svcs.Items {
-							mySvc := dup.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
+							mySvc := dup.Modify(svc, cCtx.String("replace"), cCtx.String("with"))
 							fmt.Printf("---\n")
 							yamlData, err := yaml.Marshal(&mySvc)
 							if err != nil {
@@ -119,18 +92,19 @@ func main() {
 			},
 			{
 				Name:      "graph",
-				Usage:     "Prints relations of a resource",
+				Usage:     "prints top-down relations of a resource kind",
 				ArgsUsage: "kind",
 				Action: func(cCtx *cli.Context) error {
+					supportedKinds := "svc"
 					if !cCtx.Args().Present() {
-						return fmt.Errorf("please supply a resource kind")
+						return fmt.Errorf("please supply one of: %s", supportedKinds)
 					}
-					client, err := GetOutOfClusterClient(kubeconfig)
+					client, err := clientset.GetOutOfCluster(kubeconfig)
 					if err != nil {
 						return err
 					}
 					switch cCtx.Args().First() {
-					case "svc", "service", "services":
+					case "svc":
 						services, err := graph.Services(*client, namespace)
 						if err != nil {
 							return err
@@ -140,6 +114,35 @@ func main() {
 						return fmt.Errorf("unsupported resource kind: %s", cCtx.Args().First())
 					}
 					return nil
+				},
+			},
+			{
+				Name:  "logs",
+				Usage: "prints containers logs",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "pattern",
+						Usage: "logs matching `regex` pattern (case insensitive)",
+					},
+					&cli.IntFlag{
+						Name:  "tail",
+						Value: 10,
+						Usage: "last `n` log lines",
+					},
+					&phase,
+				},
+				ArgsUsage: "[pod...]",
+				Action: func(cCtx *cli.Context) error {
+					client, err := clientset.GetOutOfCluster(kubeconfig)
+					if err != nil {
+						return err
+					}
+					rx, err := regexp.Compile("(?i)" + cCtx.String("pattern"))
+					if err != nil {
+						return err
+					}
+					args := cCtx.Args()
+					return logs.Print(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
 				},
 			},
 		},

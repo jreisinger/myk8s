@@ -6,8 +6,8 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func ToMySvc(in v1.Service, replace, with string) MySvc {
-	return MySvc{
+func Modify(in v1.Service, replace, with string) MyService {
+	return MyService{
 		ApiVersion: "v1",
 		Kind:       "Service",
 		Metadata: Metadata{
@@ -28,7 +28,7 @@ func ToMySvc(in v1.Service, replace, with string) MySvc {
 	}
 }
 
-type MySvc struct {
+type MyService struct {
 	ApiVersion string `json:"apiVersion,omitempty"`
 	Kind       string `json:"kind,omitempty"`
 	Spec       `json:"spec,omitempty"`

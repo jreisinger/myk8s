@@ -1,15 +1,15 @@
 ```
 NAME:
-   myk8s - my way of talking to Kubernetes cluster :-)
+   myk8s - talks to Kubernetes cluster, my way :-)
 
 USAGE:
    myk8s [global options] command [command options]
 
 COMMANDS:
-   logs      Prints logs of containers
-   services  Prints services in YAML consumable by kubectl
-   graph     Visualizes relations of a resource
-   help, h   Shows a list of commands or help for one command
+   dup      prints existing resources in YAML consumable by kubectl apply
+   graph    prints top-down relations of a resource kind
+   logs     prints containers logs
+   help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    --kubeconfig value, -k value  path to the kubeconfig file (default: "/Users/jozef.reisinger/.kube/config")
