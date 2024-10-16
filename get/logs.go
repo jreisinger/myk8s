@@ -1,4 +1,4 @@
-package main
+package get
 
 import (
 	"context"
@@ -16,7 +16,7 @@ type Container struct {
 	Logs []string
 }
 
-func GetLogs(client kubernetes.Clientset, namespace string, pod corev1.Pod, regex *regexp.Regexp) ([]Container, error) {
+func logs(client kubernetes.Clientset, namespace string, pod corev1.Pod, regex *regexp.Regexp) ([]Container, error) {
 	var containers []Container
 
 	for _, container := range pod.Spec.Containers {
@@ -45,7 +45,7 @@ func GetLogs(client kubernetes.Clientset, namespace string, pod corev1.Pod, rege
 }
 
 func Logs(client *kubernetes.Clientset, namespace string, rx *regexp.Regexp, tail int, podPhase string, podNames ...string) error {
-	pods, err := GetPods(*client, namespace, podPhase)
+	pods, err := Pods(*client, namespace, podPhase)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ POD:
 			continue POD
 		}
 
-		containers, _ := GetLogs(*client, namespace, pod, rx)
+		containers, _ := logs(*client, namespace, pod, rx)
 		for _, c := range containers {
 			if len(c.Logs) > 0 {
 				podHasLogs[pod.Name] = true
@@ -72,7 +72,7 @@ POD:
 			continue
 		}
 
-		containers, err := GetLogs(*client, namespace, pod, rx)
+		containers, err := logs(*client, namespace, pod, rx)
 		if err != nil {
 			log.Print(err)
 			continue

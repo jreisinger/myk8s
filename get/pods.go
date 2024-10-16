@@ -1,4 +1,4 @@
-package main
+package get
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func GetPods(client kubernetes.Clientset, namespace string, phase string) (*v1.PodList, error) {
+func Pods(client kubernetes.Clientset, namespace string, phase string) (*v1.PodList, error) {
 	pods, err := client.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err

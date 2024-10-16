@@ -10,6 +10,9 @@ import (
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
+
+	"github.com/jreisinger/myk8s/get"
+	"github.com/jreisinger/myk8s/graph"
 )
 
 func main() {
@@ -66,7 +69,7 @@ func main() {
 						return err
 					}
 					args := cCtx.Args()
-					return Logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
+					return get.Logs(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
 				},
 			},
 			{
@@ -87,12 +90,12 @@ func main() {
 					if err != nil {
 						return err
 					}
-					services, err := GetServices(*client, namespace)
+					services, err := get.Services(*client, namespace)
 					if err != nil {
 						return err
 					}
 					for _, svc := range services.Items {
-						mySvc := ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
+						mySvc := get.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
 						fmt.Printf("---\n")
 						yamlData, err := yaml.Marshal(&mySvc)
 						if err != nil {
@@ -104,31 +107,27 @@ func main() {
 				},
 			},
 			{
-				Name:  "graph",
-				Usage: "Visualizes relations of each pod",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "bypod",
-						Usage: "group by pod instead by top level object",
-					},
-					&phase,
-				},
+				Name:      "graph",
+				Usage:     "Visualizes relations of a resource",
+				ArgsUsage: "kind",
 				Action: func(cCtx *cli.Context) error {
+					if !cCtx.Args().Present() {
+						return fmt.Errorf("please supply a resource kind")
+					}
 					client, err := GetOutOfClusterClient(kubeconfig)
 					if err != nil {
 						return err
 					}
-					graphs, err := GetGraphs(*client, namespace, cCtx.String("phase"))
-					if err != nil {
-						return err
-					}
-					if cCtx.Bool("nogroup") {
-						for _, g := range graphs {
-							fmt.Println(g)
+					switch cCtx.Args().First() {
+					case "svc", "service", "services":
+						services, err := graph.Services(*client, namespace)
+						if err != nil {
+							return err
 						}
-						return nil
+						graph.PrintMyServices(services)
+					default:
+						return fmt.Errorf("unsupported resource kind: %s", cCtx.Args().First())
 					}
-					fmt.Println(graphs)
 					return nil
 				},
 			},

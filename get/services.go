@@ -1,4 +1,4 @@
-package main
+package get
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func GetServices(client kubernetes.Clientset, namespace string) (*v1.ServiceList, error) {
+func Services(client kubernetes.Clientset, namespace string) (*v1.ServiceList, error) {
 	return client.CoreV1().Services(namespace).List(context.TODO(), metav1.ListOptions{})
 }
 

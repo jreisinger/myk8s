@@ -8,7 +8,7 @@ USAGE:
 COMMANDS:
    logs      Prints logs of containers
    services  Prints services in YAML consumable by kubectl
-   graph     Visualizes relations of each pod
+   graph     Visualizes relations of a resource
    help, h   Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
