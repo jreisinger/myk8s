@@ -11,10 +11,10 @@ import (
 	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/yaml"
 
+	"github.com/jreisinger/myk8s/dup"
 	"github.com/jreisinger/myk8s/get"
 	"github.com/jreisinger/myk8s/graph"
 	"github.com/jreisinger/myk8s/logs"
-	"github.com/jreisinger/myk8s/services"
 )
 
 func main() {
@@ -47,7 +47,7 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "logs",
-				Usage: "Prints logs of containers",
+				Usage: "Prints containers logs",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "pattern",
@@ -75,8 +75,9 @@ func main() {
 				},
 			},
 			{
-				Name:  "services",
-				Usage: "Prints services in YAML consumable by kubectl",
+				Name:      "dup",
+				Usage:     "Prints existing resources in YAML consumable by kubectl apply",
+				ArgsUsage: "kind",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "replace",
@@ -88,29 +89,37 @@ func main() {
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
+					if !cCtx.Args().Present() {
+						return fmt.Errorf("please supply a resource kind")
+					}
 					client, err := GetOutOfClusterClient(kubeconfig)
 					if err != nil {
 						return err
 					}
-					svcs, err := get.Services(*client, namespace)
-					if err != nil {
-						return err
-					}
-					for _, svc := range svcs.Items {
-						mySvc := services.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
-						fmt.Printf("---\n")
-						yamlData, err := yaml.Marshal(&mySvc)
+					switch cCtx.Args().First() {
+					case "svc", "service", "services":
+						svcs, err := get.Services(*client, namespace)
 						if err != nil {
 							return err
 						}
-						fmt.Print(string(yamlData))
+						for _, svc := range svcs.Items {
+							mySvc := dup.ToMySvc(svc, cCtx.String("replace"), cCtx.String("with"))
+							fmt.Printf("---\n")
+							yamlData, err := yaml.Marshal(&mySvc)
+							if err != nil {
+								return err
+							}
+							fmt.Print(string(yamlData))
+						}
+					default:
+						return fmt.Errorf("unsupported resource kind: %s", cCtx.Args().First())
 					}
 					return nil
 				},
 			},
 			{
 				Name:      "graph",
-				Usage:     "Visualizes relations of a resource",
+				Usage:     "Prints relations of a resource",
 				ArgsUsage: "kind",
 				Action: func(cCtx *cli.Context) error {
 					if !cCtx.Args().Present() {
