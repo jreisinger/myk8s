@@ -97,6 +97,9 @@ func getPodsContainers(pod v1.Pod) []MyContainer {
 }
 
 func isServiceMatchingPod(serviceSelector, podLabels map[string]string) bool {
+	if serviceSelector == nil {
+		return false
+	}
 	for selectorK, selectorV := range serviceSelector {
 		if podLabelV, ok := podLabels[selectorK]; !ok || podLabelV != selectorV {
 			return false
