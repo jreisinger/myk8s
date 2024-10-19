@@ -14,7 +14,6 @@ import (
 	"github.com/jreisinger/myk8s/dup"
 	"github.com/jreisinger/myk8s/graph"
 	"github.com/jreisinger/myk8s/internal/clientset"
-	"github.com/jreisinger/myk8s/internal/get"
 	"github.com/jreisinger/myk8s/logs"
 )
 
@@ -71,14 +70,13 @@ func main() {
 					}
 					switch cCtx.Args().First() {
 					case "svc":
-						svcs, err := get.Services(*client, namespace)
+						svcs, err := dup.Services(*client, namespace, cCtx.String("replace"), cCtx.String("with"))
 						if err != nil {
 							return err
 						}
-						for _, svc := range svcs.Items {
-							mySvc := dup.Modify(svc, cCtx.String("replace"), cCtx.String("with"))
+						for _, svc := range svcs {
 							fmt.Printf("---\n")
-							yamlData, err := yaml.Marshal(&mySvc)
+							yamlData, err := yaml.Marshal(&svc)
 							if err != nil {
 								return err
 							}

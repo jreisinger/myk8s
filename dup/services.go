@@ -3,15 +3,33 @@ package dup
 import (
 	"strings"
 
+	"github.com/jreisinger/myk8s/internal/get"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-func Modify(in v1.Service, replace, with string) MyService {
+// Services gets existing services, removes fields not consumable by
+// kubectl apply -f and replaces instances of string in name field.
+func Services(client kubernetes.Clientset, namespace, replace, with string) ([]MyService, error) {
+	svcs, err := get.Services(client, namespace)
+	if err != nil {
+		return nil, err
+	}
+	var myServices []MyService
+	for _, svc := range svcs.Items {
+		mySvc := toMyService(svc)
+		mySvc.Name = strings.ReplaceAll(svc.Name, replace, with)
+		myServices = append(myServices, mySvc)
+	}
+	return myServices, nil
+}
+
+func toMyService(in v1.Service) MyService {
 	return MyService{
 		ApiVersion: "v1",
 		Kind:       "Service",
 		Metadata: Metadata{
-			Name:        strings.ReplaceAll(in.Name, replace, with),
+			Name:        in.Name,
 			Namespace:   in.Namespace,
 			Labels:      in.Labels,
 			Annotations: in.Annotations,

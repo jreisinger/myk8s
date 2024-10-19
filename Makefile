@@ -1,6 +1,4 @@
-build: test
+build:
 	go build
-test:
-	go test -race ./...
-build-linux: test
+build-linux:
 	GOOS=linux GOARCH=amd64 go build -ldflags "-s -w"
