@@ -14,6 +14,7 @@ import (
 	"github.com/jreisinger/myk8s/dup"
 	"github.com/jreisinger/myk8s/graph"
 	"github.com/jreisinger/myk8s/internal/clientset"
+	"github.com/jreisinger/myk8s/internal/get"
 	"github.com/jreisinger/myk8s/logs"
 )
 
@@ -141,6 +142,42 @@ func main() {
 					}
 					args := cCtx.Args()
 					return logs.Print(client, namespace, rx, cCtx.Int("tail"), cCtx.String("phase"), args.Slice()...)
+				},
+			},
+			{
+				Name:      "names",
+				Usage:     "print object names",
+				ArgsUsage: "[kind]",
+				Action: func(ctx *cli.Context) error {
+					supportedKinds := "pods deployments"
+					if !ctx.Args().Present() {
+						return fmt.Errorf("please supply one of: %s", supportedKinds)
+					}
+					client, err := clientset.GetOutOfCluster(kubeconfig)
+					if err != nil {
+						return err
+					}
+					switch ctx.Args().First() {
+					case "pod", "pods":
+						podList, err := get.Pods(*client, namespace, "")
+						if err != nil {
+							return err
+						}
+						for _, pod := range podList.Items {
+							fmt.Println(pod.Name)
+						}
+					case "deployment", "deployments":
+						deploymentList, err := get.Deployments(*client, namespace)
+						if err != nil {
+							return err
+						}
+						for _, d := range deploymentList.Items {
+							fmt.Println(d.Name)
+						}
+					default:
+						return fmt.Errorf("unsupported kind: %s", ctx.Args().First())
+					}
+					return nil
 				},
 			},
 		},
