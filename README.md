@@ -1,4 +1,5 @@
 ```
+❯ ./myk8s
 NAME:
    myk8s - talks to Kubernetes cluster, my way :-)
 
@@ -9,6 +10,7 @@ COMMANDS:
    dup      prints existing resources in YAML consumable by kubectl apply
    graph    prints top-down relations of a resource kind
    logs     prints containers logs
+   names    print object names
    help, h  Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
