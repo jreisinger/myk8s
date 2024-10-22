@@ -8,15 +8,19 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// Services gets existing services, removes fields not consumable by
-// kubectl apply -f and replaces instances of string in name field.
-func Services(client kubernetes.Clientset, namespace, replace, with string) ([]MyService, error) {
+// Services gets existing service or sevices (if name is empty), removes fields
+// not consumable by kubectl apply -f and replaces instances of string in name
+// field.
+func Services(client kubernetes.Clientset, namespace, name, replace, with string) ([]MyService, error) {
 	svcs, err := get.Services(client, namespace)
 	if err != nil {
 		return nil, err
 	}
 	var myServices []MyService
 	for _, svc := range svcs.Items {
+		if name != "" && svc.Name != name {
+			continue
+		}
 		mySvc := toMyService(svc)
 		mySvc.Name = strings.ReplaceAll(svc.Name, replace, with)
 		myServices = append(myServices, mySvc)

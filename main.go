@@ -48,7 +48,7 @@ func main() {
 			{
 				Name:      "dup",
 				Usage:     "prints existing resources in YAML consumable by kubectl apply",
-				ArgsUsage: "kind",
+				ArgsUsage: "kind [name]",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "replace",
@@ -70,7 +70,7 @@ func main() {
 					}
 					switch cCtx.Args().First() {
 					case "svc":
-						svcs, err := dup.Services(*client, namespace, cCtx.String("replace"), cCtx.String("with"))
+						svcs, err := dup.Services(*client, namespace, cCtx.Args().Get(1), cCtx.String("replace"), cCtx.String("with"))
 						if err != nil {
 							return err
 						}
