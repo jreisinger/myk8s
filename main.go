@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 	"k8s.io/client-go/util/homedir"
@@ -145,20 +146,22 @@ func main() {
 				},
 			},
 			{
-				Name:      "names",
-				Usage:     "print object names",
-				ArgsUsage: "[kind]",
+				Name:  "names",
+				Usage: "print object names",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "of",
+						Value: "pods",
+						Usage: "`kind`",
+					},
+				},
 				Action: func(ctx *cli.Context) error {
-					supportedKinds := "pods deployments"
-					if !ctx.Args().Present() {
-						return fmt.Errorf("please supply one of: %s", supportedKinds)
-					}
 					client, err := clientset.GetOutOfCluster(kubeconfig)
 					if err != nil {
 						return err
 					}
-					switch ctx.Args().First() {
-					case "pod", "pods":
+					switch ctx.String("of") {
+					case "pods":
 						podList, err := get.Pods(*client, namespace, "")
 						if err != nil {
 							return err
@@ -166,7 +169,7 @@ func main() {
 						for _, pod := range podList.Items {
 							fmt.Println(pod.Name)
 						}
-					case "deployment", "deployments":
+					case "deployments":
 						deploymentList, err := get.Deployments(*client, namespace)
 						if err != nil {
 							return err
@@ -175,7 +178,8 @@ func main() {
 							fmt.Println(d.Name)
 						}
 					default:
-						return fmt.Errorf("unsupported kind: %s", ctx.Args().First())
+						supportedKinds := []string{"pods", "deployments"}
+						return fmt.Errorf("unsupported kind %s, select from: %s", ctx.String("of"), strings.Join(supportedKinds, ", "))
 					}
 					return nil
 				},
