@@ -25,18 +25,35 @@ type MyPod struct {
 type MyContainer struct {
 	Name  string
 	Ports []v1.ContainerPort
+	Env   []v1.EnvVar
 }
 
 func PrintMyServices(myServices []MyService) {
 	for _, svc := range myServices {
-		fmt.Printf("%s: %s\n", svc.Name, formatServicePorts(svc.Ports))
+		fmt.Printf("svc/%s:%s\n", svc.Name, formatServicePorts(svc.Ports))
 		for _, pod := range svc.Pods {
-			fmt.Printf("%s%s\n", "└─", pod.Name)
+			fmt.Printf("%spod/%s\n", "└─", pod.Name)
 			for _, c := range pod.Containers {
-				fmt.Printf("%s%s: %s\n", "  └─", c.Name, formatContainerPorts(c.Ports))
+				fmt.Printf("%scontainer/%s: %s\n", "  └─", c.Name, formatContainerPorts(c.Ports))
+				for _, e := range c.Env {
+					fmt.Printf("%s%s: %s", "    └─", e.Name, e.Value)
+					if s := envVarReferencesService(e, myServices); s != nil {
+						fmt.Printf(" -> svc/%s", s.Name)
+					}
+					fmt.Println()
+				}
 			}
 		}
 	}
+}
+
+func envVarReferencesService(e v1.EnvVar, myServices []MyService) *MyService {
+	for _, svc := range myServices {
+		if strings.Contains(e.Value, svc.Name) {
+			return &svc
+		}
+	}
+	return nil
 }
 
 func formatServicePorts(ports []v1.ServicePort) string {
@@ -91,7 +108,7 @@ func Services(client kubernetes.Clientset, namespace string) ([]MyService, error
 func getPodsContainers(pod v1.Pod) []MyContainer {
 	var myContainers []MyContainer
 	for _, c := range pod.Spec.Containers {
-		myContainers = append(myContainers, MyContainer{Name: c.Name, Ports: c.Ports})
+		myContainers = append(myContainers, MyContainer{Name: c.Name, Ports: c.Ports, Env: c.Env})
 	}
 	return myContainers
 }
