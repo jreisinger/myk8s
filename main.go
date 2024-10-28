@@ -13,10 +13,10 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"github.com/jreisinger/myk8s/dup"
-	"github.com/jreisinger/myk8s/graph"
 	"github.com/jreisinger/myk8s/internal/clientset"
 	"github.com/jreisinger/myk8s/internal/get"
 	"github.com/jreisinger/myk8s/logs"
+	"github.com/jreisinger/myk8s/tree"
 )
 
 func main() {
@@ -91,32 +91,6 @@ func main() {
 				},
 			},
 			{
-				Name:      "graph",
-				Usage:     "prints top-down relations of a resource kind",
-				ArgsUsage: "kind",
-				Action: func(cCtx *cli.Context) error {
-					supportedKinds := "svc"
-					if !cCtx.Args().Present() {
-						return fmt.Errorf("please supply one of: %s", supportedKinds)
-					}
-					client, err := clientset.GetOutOfCluster(kubeconfig)
-					if err != nil {
-						return err
-					}
-					switch cCtx.Args().First() {
-					case "svc":
-						services, err := graph.Services(*client, namespace)
-						if err != nil {
-							return err
-						}
-						graph.PrintMyServices(services)
-					default:
-						return fmt.Errorf("unsupported resource kind: %s", cCtx.Args().First())
-					}
-					return nil
-				},
-			},
-			{
 				Name:  "logs",
 				Usage: "prints containers logs",
 				Flags: []cli.Flag{
@@ -181,6 +155,22 @@ func main() {
 						supportedKinds := []string{"pods", "deployments"}
 						return fmt.Errorf("unsupported kind %s, select from: %s", ctx.String("of"), strings.Join(supportedKinds, ", "))
 					}
+					return nil
+				},
+			},
+			{
+				Name:  "tree",
+				Usage: "prints top-down relations of objects",
+				Action: func(cCtx *cli.Context) error {
+					client, err := clientset.GetOutOfCluster(kubeconfig)
+					if err != nil {
+						return err
+					}
+					services, err := tree.Services(*client, namespace)
+					if err != nil {
+						return err
+					}
+					tree.PrintMyServices(services)
 					return nil
 				},
 			},
