@@ -164,7 +164,7 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "only-env-to-svc",
-						Usage: "only environment variables pointing to a service",
+						Usage: "only environment variables whose value contains a service name",
 					},
 				},
 				Action: func(cCtx *cli.Context) error {
