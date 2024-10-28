@@ -3,6 +3,7 @@ module github.com/jreisinger/myk8s
 go 1.23.1
 
 require (
+	github.com/dominikbraun/graph v0.23.0
 	github.com/urfave/cli/v2 v2.27.4
 	k8s.io/api v0.31.1
 	k8s.io/apimachinery v0.31.1
