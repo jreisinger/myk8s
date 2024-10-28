@@ -55,10 +55,16 @@ func PrintMyServices(myServices []MyService, onlyEnvToSvc bool) {
 }
 
 func envVarReferencesService(e v1.EnvVar, myServices []MyService) *MyService {
+	var longest MyService
 	for _, svc := range myServices {
 		if strings.Contains(e.Value, svc.Name) {
-			return &svc
+			if len(svc.Name) > len(longest.Name) {
+				longest = svc
+			}
 		}
+	}
+	if longest.Name != "" {
+		return &longest
 	}
 	return nil
 }
