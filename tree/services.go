@@ -28,7 +28,7 @@ type MyContainer struct {
 	Env   []v1.EnvVar
 }
 
-func PrintMyServices(myServices []MyService) {
+func PrintMyServices(myServices []MyService, onlyEnvToSvc bool) {
 	for _, svc := range myServices {
 		fmt.Printf("svc/%s:%s\n", svc.Name, formatServicePorts(svc.Ports))
 		for _, pod := range svc.Pods {
@@ -36,11 +36,18 @@ func PrintMyServices(myServices []MyService) {
 			for _, c := range pod.Containers {
 				fmt.Printf("%scontainer/%s: %s\n", "  └─", c.Name, formatContainerPorts(c.Ports))
 				for _, e := range c.Env {
-					fmt.Printf("%s%s: %s", "    └─", e.Name, e.Value)
-					if s := envVarReferencesService(e, myServices); s != nil {
-						fmt.Printf(" -> svc/%s", s.Name)
+					if onlyEnvToSvc {
+						if s := envVarReferencesService(e, myServices); s != nil {
+							fmt.Printf("%s%s: %s", "    └─", e.Name, e.Value)
+							fmt.Printf(" -> svc/%s\n", s.Name)
+						}
+					} else {
+						fmt.Printf("%s%s: %s", "    └─", e.Name, e.Value)
+						if s := envVarReferencesService(e, myServices); s != nil {
+							fmt.Printf(" -> svc/%s", s.Name)
+						}
+						fmt.Println()
 					}
-					fmt.Println()
 				}
 			}
 		}

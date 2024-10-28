@@ -161,6 +161,12 @@ func main() {
 			{
 				Name:  "tree",
 				Usage: "prints top-down relations of objects",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "only-env-to-svc",
+						Usage: "only environment variables pointing to a service",
+					},
+				},
 				Action: func(cCtx *cli.Context) error {
 					client, err := clientset.GetOutOfCluster(kubeconfig)
 					if err != nil {
@@ -170,7 +176,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					tree.PrintMyServices(services)
+					tree.PrintMyServices(services, cCtx.Bool("only-env-to-svc"))
 					return nil
 				},
 			},
