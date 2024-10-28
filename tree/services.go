@@ -30,7 +30,7 @@ type MyContainer struct {
 
 func PrintMyServices(myServices []MyService, onlyEnvToSvc bool) {
 	for _, svc := range myServices {
-		fmt.Printf("svc/%s:%s\n", svc.Name, formatServicePorts(svc.Ports))
+		fmt.Printf("svc/%s: %s\n", svc.Name, formatServicePorts(svc.Ports))
 		for _, pod := range svc.Pods {
 			fmt.Printf("%spod/%s\n", "└─", pod.Name)
 			for _, c := range pod.Containers {
@@ -68,7 +68,7 @@ func formatServicePorts(ports []v1.ServicePort) string {
 	for _, p := range ports {
 		ss = append(ss, fmt.Sprintf("%d/%s", p.Port, p.Protocol))
 	}
-	return strings.Join(ss, ",")
+	return strings.Join(ss, ", ")
 }
 
 func formatContainerPorts(ports []v1.ContainerPort) string {
@@ -76,7 +76,7 @@ func formatContainerPorts(ports []v1.ContainerPort) string {
 	for _, p := range ports {
 		ss = append(ss, fmt.Sprintf("%d/%s", p.ContainerPort, p.Protocol))
 	}
-	return strings.Join(ss, ",")
+	return strings.Join(ss, ", ")
 }
 
 func Services(client kubernetes.Clientset, namespace string) ([]MyService, error) {
