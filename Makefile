@@ -1,5 +1,7 @@
 test:
 	go test -race ./...
+install: test
+	go install
 build: test
 	go build
 build-linux: test
