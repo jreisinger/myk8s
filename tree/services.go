@@ -11,24 +11,24 @@ import (
 	"github.com/jreisinger/myk8s/internal/get"
 )
 
-type MyService struct {
+type Service struct {
 	Name  string
 	Ports []v1.ServicePort
-	Pods  []MyPod
+	Pods  []Pod
 }
 
-type MyPod struct {
+type Pod struct {
 	Name       string
-	Containers []MyContainer
+	Containers []Container
 }
 
-type MyContainer struct {
+type Container struct {
 	Name  string
 	Ports []v1.ContainerPort
 	Env   []v1.EnvVar
 }
 
-func PrintMyServices(myServices []MyService, onlyEnvToSvc bool) {
+func PrintServices(myServices []Service, onlyEnvToSvc bool) {
 	for _, svc := range myServices {
 		fmt.Printf("svc/%s: %s\n", svc.Name, formatServicePorts(svc.Ports))
 		for _, pod := range svc.Pods {
@@ -54,8 +54,8 @@ func PrintMyServices(myServices []MyService, onlyEnvToSvc bool) {
 	}
 }
 
-func envVarReferencesService(e v1.EnvVar, myServices []MyService) *MyService {
-	var longest MyService
+func envVarReferencesService(e v1.EnvVar, myServices []Service) *Service {
+	var longest Service
 	for _, svc := range myServices {
 		if strings.Contains(e.Value, svc.Name) {
 			if len(svc.Name) > len(longest.Name) {
@@ -85,7 +85,7 @@ func formatContainerPorts(ports []v1.ContainerPort) string {
 	return strings.Join(ss, ", ")
 }
 
-func Services(client kubernetes.Clientset, namespace string) ([]MyService, error) {
+func GetServices(client kubernetes.Clientset, namespace string) ([]Service, error) {
 	services, err := get.Services(client, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("getting services: %v", err)
@@ -94,22 +94,22 @@ func Services(client kubernetes.Clientset, namespace string) ([]MyService, error
 	if err != nil {
 		return nil, fmt.Errorf("getting pods: %v", err)
 	}
-	var myServices []MyService
+	var myServices []Service
 	for _, svc := range services.Items {
 		if svc.Spec.ClusterIP == "None" && svc.Spec.Selector == nil {
 			log.Printf("skipping headless service w/o selector: %s\n", svc.Name)
 			continue
 		}
-		var servicePods []MyPod
+		var servicePods []Pod
 		for _, pod := range pods.Items {
 			podLabels := pod.GetLabels()
 			if isServiceMatchingPod(svc.Spec.Selector, podLabels) {
 				servicePods = append(servicePods,
-					MyPod{Name: pod.Name, Containers: getPodsContainers(pod)},
+					Pod{Name: pod.Name, Containers: getPodsContainers(pod)},
 				)
 			}
 		}
-		myServices = append(myServices, MyService{
+		myServices = append(myServices, Service{
 			Name:  svc.Name,
 			Ports: svc.Spec.Ports,
 			Pods:  servicePods,
@@ -118,10 +118,10 @@ func Services(client kubernetes.Clientset, namespace string) ([]MyService, error
 	return myServices, nil
 }
 
-func getPodsContainers(pod v1.Pod) []MyContainer {
-	var myContainers []MyContainer
+func getPodsContainers(pod v1.Pod) []Container {
+	var myContainers []Container
 	for _, c := range pod.Spec.Containers {
-		myContainers = append(myContainers, MyContainer{Name: c.Name, Ports: c.Ports, Env: c.Env})
+		myContainers = append(myContainers, Container{Name: c.Name, Ports: c.Ports, Env: c.Env})
 	}
 	return myContainers
 }

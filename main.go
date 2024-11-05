@@ -172,11 +172,11 @@ func main() {
 					if err != nil {
 						return err
 					}
-					services, err := tree.Services(*client, namespace)
+					services, err := tree.GetServices(*client, namespace)
 					if err != nil {
 						return err
 					}
-					tree.PrintMyServices(services, cCtx.Bool("only-env-to-svc"))
+					tree.PrintServices(services, cCtx.Bool("only-env-to-svc"))
 					return nil
 				},
 			},

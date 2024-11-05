@@ -10,13 +10,13 @@ func TestEnvVarReferencesService(t *testing.T) {
 	tests := []struct {
 		name       string
 		envVar     v1.EnvVar
-		myServices []MyService
-		expected   *MyService
+		myServices []Service
+		expected   *Service
 	}{
 		{
 			name:   "no reference",
 			envVar: v1.EnvVar{Name: "ENV_VAR", Value: "service3"},
-			myServices: []MyService{
+			myServices: []Service{
 				{Name: "service1"},
 				{Name: "service2"},
 			},
@@ -25,25 +25,25 @@ func TestEnvVarReferencesService(t *testing.T) {
 		{
 			name:   "single reference",
 			envVar: v1.EnvVar{Name: "ENV_VAR", Value: "service1"},
-			myServices: []MyService{
+			myServices: []Service{
 				{Name: "service1"},
 				{Name: "service2"},
 			},
-			expected: &MyService{Name: "service1"},
+			expected: &Service{Name: "service1"},
 		},
 		{
 			name:   "multiple references, longest name",
 			envVar: v1.EnvVar{Name: "ENV_VAR", Value: "service-name"},
-			myServices: []MyService{
+			myServices: []Service{
 				{Name: "service"},
 				{Name: "service-name"},
 			},
-			expected: &MyService{Name: "service-name"},
+			expected: &Service{Name: "service-name"},
 		},
 		{
 			name:       "no services",
 			envVar:     v1.EnvVar{Name: "ENV_VAR", Value: "some-value"},
-			myServices: []MyService{},
+			myServices: []Service{},
 			expected:   nil,
 		},
 	}
