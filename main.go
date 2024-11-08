@@ -126,7 +126,7 @@ func main() {
 					&cli.StringFlag{
 						Name:  "kind",
 						Usage: "resource kind",
-						Value: "pods",
+						Value: "pod",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -135,7 +135,7 @@ func main() {
 						return err
 					}
 					switch ctx.String("kind") {
-					case "pods":
+					case "pod":
 						podList, err := get.Pods(*client, namespace, "")
 						if err != nil {
 							return err
@@ -143,7 +143,7 @@ func main() {
 						for _, pod := range podList.Items {
 							fmt.Println(pod.Name)
 						}
-					case "deployments":
+					case "deployment":
 						deploymentList, err := get.Deployments(*client, namespace)
 						if err != nil {
 							return err
@@ -152,7 +152,7 @@ func main() {
 							fmt.Println(d.Name)
 						}
 					default:
-						supportedKinds := []string{"pods", "deployments"}
+						supportedKinds := []string{"pod", "deployment"}
 						return fmt.Errorf("unsupported kind %s, select from: %s", ctx.String("of"), strings.Join(supportedKinds, ", "))
 					}
 					return nil
