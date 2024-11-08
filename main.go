@@ -121,7 +121,7 @@ func main() {
 			},
 			{
 				Name:  "names",
-				Usage: "print object names",
+				Usage: "prints object names",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "of",
