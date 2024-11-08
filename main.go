@@ -166,17 +166,34 @@ func main() {
 						Name:  "only-env-to-svc",
 						Usage: "only environment variables whose value contains a service name",
 					},
+					&cli.StringFlag{
+						Name:  "kind",
+						Usage: "top-level resource kind",
+						Value: "service",
+					},
 				},
 				Action: func(cCtx *cli.Context) error {
 					client, err := clientset.GetOutOfCluster(kubeconfig)
 					if err != nil {
 						return err
 					}
-					services, err := tree.GetServices(*client, namespace)
-					if err != nil {
-						return err
+					switch cCtx.String("kind") {
+					case "service":
+						services, err := tree.GetServices(*client, namespace)
+						if err != nil {
+							return err
+						}
+						tree.PrintServices(services, cCtx.Bool("only-env-to-svc"))
+					case "deployment":
+						deployments, err := tree.GetDeployments(*client, namespace)
+						if err != nil {
+							return err
+						}
+						tree.PrintDeployments(deployments)
+					default:
+						supportedKinds := []string{"service", "deployment"}
+						return fmt.Errorf("unsupported kind %s, select from: %s", cCtx.String("kind"), strings.Join(supportedKinds, ", "))
 					}
-					tree.PrintServices(services, cCtx.Bool("only-env-to-svc"))
 					return nil
 				},
 			},
