@@ -124,9 +124,9 @@ func main() {
 				Usage: "prints object names",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "of",
+						Name:  "kind",
+						Usage: "resource kind",
 						Value: "pods",
-						Usage: "`kind`",
 					},
 				},
 				Action: func(ctx *cli.Context) error {
@@ -134,7 +134,7 @@ func main() {
 					if err != nil {
 						return err
 					}
-					switch ctx.String("of") {
+					switch ctx.String("kind") {
 					case "pods":
 						podList, err := get.Pods(*client, namespace, "")
 						if err != nil {
