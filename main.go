@@ -17,6 +17,7 @@ import (
 	"github.com/jreisinger/myk8s/internal/get"
 	"github.com/jreisinger/myk8s/logs"
 	"github.com/jreisinger/myk8s/tree"
+	"github.com/jreisinger/myk8s/trouble"
 )
 
 func main() {
@@ -194,6 +195,26 @@ func main() {
 						supportedKinds := []string{"service", "deployment"}
 						return fmt.Errorf("unsupported kind %s, select from: %s", cCtx.String("kind"), strings.Join(supportedKinds, ", "))
 					}
+					return nil
+				},
+			},
+			{
+				Name:  "trouble",
+				Usage: "prints troublesome pods",
+				Action: func(cCtx *cli.Context) error {
+					client, err := clientset.GetOutOfCluster(kubeconfig)
+					if err != nil {
+						return err
+					}
+
+					podList, err := get.Pods(*client, namespace, "")
+					if err != nil {
+						return err
+					}
+
+					pods := trouble.GetPods(podList)
+					trouble.PrintPods(pods)
+
 					return nil
 				},
 			},
