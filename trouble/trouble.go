@@ -19,7 +19,7 @@ func GetPods(podList *v1.PodList) []Pod {
 		var podIsTroublesome bool
 
 		// Pod ...
-		if pod.Status.Phase != "Running" && pod.Status.Phase != "Succeeded" {
+		if pod.Status.Phase != v1.PodRunning && pod.Status.Phase != v1.PodSucceeded {
 			// ... not running and not successfully finished.
 			podIsTroublesome = true
 		}
@@ -28,7 +28,7 @@ func GetPods(podList *v1.PodList) []Pod {
 		for _, cs := range pod.Status.ContainerStatuses {
 			if cs.State.Running != nil && cs.Ready {
 				// ... running and ready.
-			} else if cs.State.Terminated != nil && pod.Status.Phase == "Succeeded" {
+			} else if cs.State.Terminated != nil && pod.Status.Phase == v1.PodSucceeded {
 				// ... successfully finished.
 			} else {
 				podIsTroublesome = true
